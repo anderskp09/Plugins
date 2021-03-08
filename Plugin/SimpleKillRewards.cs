@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Oxide.Plugins
 {
-    [Info("SimpleKillRewards", "MikeL", "0.0.5")]
-    [Description("Simple Rewards for killing players or NPC's. To be configured in config or with console/ingame command. Killer must have SimpleKillRewards.enable permission to get rewards.")]
+    [Info("SimpleKillRewards", "MikeL", "0.0.6")]
+    [Description("Simple Rewards for killing players or NPC's.")]
     class SimpleKillRewards : RustPlugin
     {
         #region Config 
@@ -16,7 +18,20 @@ namespace Oxide.Plugins
             public string Shorthand { get; set; }
             [JsonProperty(PropertyName = "Ammount of item")]
             public int Ammount { get; set; }
+        }      
+
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                ["SKR.Current"] = "Currently killing a player will give:",                              
+                ["SKR.Set"] = "You sucessfully configured SKR to give:",
+                ["SKR.Incorrect"] = "Incorrect format, follow this syntax '/SKR Scrap 100' Currently 1 kill will give:",
+                ["SKR.NoPermission"] = "You dont have permision to use this command!",
+
+            }, this);
         }
+
 
         private bool LoadConfigVariables()
         {
@@ -34,7 +49,7 @@ namespace Oxide.Plugins
         void Init()
         {
             permission.RegisterPermission(permissionEnable, this);
-            permission.RegisterPermission(permissionAdmin, this);
+            permission.RegisterPermission(permissionAdmin, this);           
             if (!LoadConfigVariables())
             {
                 Puts("Config File issue detected");
@@ -64,7 +79,7 @@ namespace Oxide.Plugins
         {
             if (!(args.Args?.Length == 2) || args.Args[0] == null || args.Args[1] == null)
             {
-                Puts($"Currently killing a player will give {configData.Ammount.ToString()} {configData.Shorthand.ToString()}");
+                Puts($"{lang.GetMessage("SKR.Current", this)} {configData.Ammount.ToString()} {configData.Shorthand.ToString()}");
             }
             else
             {                             
@@ -72,11 +87,11 @@ namespace Oxide.Plugins
                 {
                     configData = new ConfigData { Shorthand = args.Args[0], Ammount = int.Parse(args.Args[1]) };
                     SaveConfig(configData);
-                    Puts($"You sucessfully configured SKR to give {configData.Ammount} {configData.Shorthand} per kill");
+                    Puts($"{lang.GetMessage("SKR.Set", this)} {configData.Ammount} {configData.Shorthand}");
                 }
                 catch
                 {
-                    Puts($"Incorrect format, follow this syntax '/SKR Scrap 100' Currently 1 kill will give  {configData.Ammount} {configData.Shorthand}");
+                    Puts($"{lang.GetMessage("SKR.Incorrect", this)} {configData.Ammount} {configData.Shorthand}");
                 }
                 
             }
@@ -87,13 +102,13 @@ namespace Oxide.Plugins
         {
             if (!(args.Length == 2) || args[0] == null || args[1] == null)
             {
-                SendReply(player, $"Currently killing a player will give {configData.Ammount.ToString()} {configData.Shorthand.ToString()}");
+                SendReply(player, $"{lang.GetMessage("SKR.Current", this)}{configData.Ammount.ToString()} {configData.Shorthand.ToString()}");
             }
             else
             {
                 if (!permission.UserHasPermission(player.userID.ToString(), permissionAdmin))
                 {
-                    SendReply(player, "You dont have permission to acess this command!");
+                    SendReply(player, lang.GetMessage("SKR.NoPermission", this));
                 }
                 else
                 {
@@ -101,11 +116,11 @@ namespace Oxide.Plugins
                     {
                         configData = new ConfigData { Shorthand = args[0], Ammount = int.Parse(args[1]) };
                         SaveConfig(configData);
-                        SendReply(player, $"You sucessfully configured SKR to give {configData.Ammount} {configData.Shorthand} per kill");
+                        SendReply(player, $"{lang.GetMessage("SKR.Set", this)} {configData.Ammount} {configData.Shorthand}");
                     }
                     catch
                     {
-                        SendReply(player, $"Incorrect format, follow this syntax '/SKR Scrap 100' Currently 1 kill will give  {configData.Ammount} {configData.Shorthand}");
+                        SendReply(player, $"{lang.GetMessage("SKR.Incorrect", this)} {configData.Ammount} {configData.Shorthand}");
                     }
                 }
             }
@@ -128,7 +143,7 @@ namespace Oxide.Plugins
             }
             catch
             {
-                Puts("Error in Config, make sure item shorthand and ammount is correct");
+                Puts(lang.GetMessage("SKR.Incorrect", this));
             }            
         }        
         #endregion Action
