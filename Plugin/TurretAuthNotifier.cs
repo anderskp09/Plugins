@@ -10,7 +10,7 @@ using static System.Net.WebRequestMethods;
 namespace Oxide.Plugins
 {
 
-    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.2")]
+    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.3")]
     class TurretAuthNotifier : RustPlugin
     {
         [PluginReference]
@@ -69,6 +69,7 @@ namespace Oxide.Plugins
         void OnTurretAuthorize(AutoTurret turret, BasePlayer player)
         {
 
+            var nameListLink = new List<string>();
             var nameList = new List<string>();
             var statusList = new List<string>();
             var idList = new List<ulong>();
@@ -78,32 +79,35 @@ namespace Oxide.Plugins
             {
                 foreach (var authed in turret.authorizedPlayers)
                 {
-                    nameList.Add($"[{authed.username}](https://steamcommunity.com/profiles/{authed.userid})");
+                    nameListLink.Add($"[{authed.username}](https://steamcommunity.com/profiles/{authed.userid})");
+                    nameList.Add(authed.username);
+
                     idList.Add(authed.userid);
                     var authedPlayer = BasePlayer.FindAwakeOrSleeping(authed.ToString());
                     if (authedPlayer == null || authedPlayer.IsConnected == false)
                     {
-                        statusList.Add(":red_circle: Offline");
+                        statusList.Add("Offline");
                     }
                     else if (authedPlayer.IsConnected)
                     {
-                        statusList.Add(":green_circle: Online");
+                        statusList.Add("Online");
                     }
                 }
                 positionList.Add($"teleportpos ({ turret.transform.position.x.ToString().Substring(0, 5)},{ turret.transform.position.y.ToString().Substring(0, 5)},{ turret.transform.position.z.ToString().Substring(0, 5)})");
-                nameList.Add($"[{player.displayName}](https://steamcommunity.com/profiles/{player.userID})");
+                nameList.Add(player.displayName);
+                nameListLink.Add($"[{player.displayName}](https://steamcommunity.com/profiles/{player.userID})");
                 idList.Add(player.userID);
                 if (player.IsConnected)
                 {
-                    statusList.Add(":green_circle: Online");
+                    statusList.Add("Online");
                 }
 
                 if(configData.IngameNotificationEnable == true)
                 {
-                    string message = configData.WebhookTitle+"\n";
+                    string message = $"{configData.WebhookTitle}\n {positionList[0]} ";
                     for (int i = 0; i < nameList.Count; i++)
                     {
-                        message += $"{statusList[i]} {nameList[i]} {idList[i].ToString()}\n";
+                        message += $"{statusList[i]} {nameList[i]} [{idList[i].ToString()}]\n";
                     }
                     
                     var admins = BasePlayer.allPlayerList.Where(p => p.IsAdmin);
@@ -116,7 +120,7 @@ namespace Oxide.Plugins
 
                 if (configData.DiscordWebhookEnable == true && configData.DiscordWebhook != "" && configData.DiscordWebhook != null)
                 {
-                    SendDiscordMessage(nameList, idList, positionList, statusList);
+                    SendDiscordMessage(nameListLink, idList, positionList, statusList);
                 }
             }
         }
@@ -127,8 +131,8 @@ namespace Oxide.Plugins
             object fields = new[]
             {
                 new
-                {
-                    name = "status", value = string.Join("\n", status), inline = true
+                {                    
+                    name = "Status", value = string.Join("\n", status), inline = true
                 },
                 new
                 {
