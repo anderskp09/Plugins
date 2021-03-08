@@ -1,37 +1,33 @@
 ﻿using Newtonsoft.Json;
-using Oxide.Core.Libraries;
 using Oxide.Core.Plugins;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Net;
-using static System.Net.WebRequestMethods;
 
 namespace Oxide.Plugins
 {
-
-    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.3")]
+    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.5")]
     class TurretAuthNotifier : RustPlugin
     {
         [PluginReference]
         private Plugin DiscordMessages;
         private ConfigData configData;
+        #region Config
         class ConfigData
         {
             [JsonProperty(PropertyName = "Max Authorised before notification")]
             public int MaxAuth { get; set; }
             [JsonProperty(PropertyName = "Enable Ingame admin Notification")]
             public bool IngameNotificationEnable { get; set; }
+            [JsonProperty(PropertyName = "Ingame 'Online message' color")]
+            public string OnlineColor { get; set; }
+            [JsonProperty(PropertyName = "Ingame 'Offline message' color")]
+            public string OfflineColor { get; set; }
             [JsonProperty(PropertyName = "Enable Discord Webhook")]
             public bool DiscordWebhookEnable { get; set; }
             [JsonProperty(PropertyName = "Discord Webhook")]
             public string DiscordWebhook { get; set; }
             [JsonProperty(PropertyName = "Discord Webhook Message")]
-            public string WebhookTitle { get; set; }
-            [JsonProperty(PropertyName = "Ingame 'Online message' color")]
-            public string OnlineColor { get; set; }
-            [JsonProperty(PropertyName = "Ingame 'Offline message' color")]
-            public string OfflineColor { get; set; }
+            public string WebhookTitle { get; set; }            
         }
 
         private bool LoadConfigVariables()
@@ -51,14 +47,14 @@ namespace Oxide.Plugins
         {
             if (!LoadConfigVariables())
             {
-                Puts("Config File issue detected, kill your config");
+                Puts("Config File issue detected, delete your config");
                 return;
             }
         }
 
         protected override void LoadDefaultConfig()
         {
-            Puts("Creating new config");
+            Puts("Creating new config with default values");
             configData = new ConfigData { MaxAuth = 1, WebhookTitle = "Max players authorized on turret exceeded", DiscordWebhook = "", DiscordWebhookEnable = true, IngameNotificationEnable = true, OnlineColor = "green", OfflineColor = "red" };
             SaveConfig(configData);
         }
@@ -67,12 +63,11 @@ namespace Oxide.Plugins
         {
             Config.WriteObject(config, true);
         }
+        #endregion Config
 
-
-
+        #region Hook
         void OnTurretAuthorize(AutoTurret turret, BasePlayer player)
         {
-
             var nameListLink = new List<string>();
             var nameList = new List<string>();
             var statusList = new List<string>();
@@ -97,45 +92,56 @@ namespace Oxide.Plugins
                         statusList.Add("Online");
                     }
                 }
+
                 positionList.Add($"Teleportpos ({ turret.transform.position.x.ToString().Substring(0, 5)},{ turret.transform.position.y.ToString().Substring(0, 5)},{ turret.transform.position.z.ToString().Substring(0, 5)})");
                 nameList.Add(player.displayName);
                 nameListLink.Add($"[{player.displayName}](https://steamcommunity.com/profiles/{player.userID})");
                 idList.Add(player.userID);
+
                 if (player.IsConnected)
                 {
                     statusList.Add("Online");
                 }
 
-                if(configData.IngameNotificationEnable == true)
+                if(configData.IngameNotificationEnable)
                 {
-                    string message = $"<color=red>{configData.WebhookTitle}</color>\n{positionList[0]}\n";
-                    for (int i = 0; i < nameList.Count; i++)
-                    {
-                        string color = "";
-                        if (statusList[i] == "Online")
-                            color = configData.OnlineColor;
-                        else
-                            color = configData.OfflineColor;
-                        message += $"<color={color}>{statusList[i]}</color> {nameList[i]} [{idList[i].ToString()}]\n";
-                    }
-                    
-                    var admins = BasePlayer.allPlayerList.Where(p => p.IsAdmin);
-                    foreach (var admin in admins)
-                    {
-                        SendReply(admin, message);
-                    }
+                    NotifyAdminsIngame(positionList, nameList, statusList, idList);
                 }
 
-                if (configData.DiscordWebhookEnable == true && configData.DiscordWebhook != "" && configData.DiscordWebhook != null)
+                if (configData.DiscordWebhookEnable && configData.DiscordWebhook != "" && configData.DiscordWebhook != null)
                 {
                     SendDiscordMessage(nameListLink, idList, positionList, statusList);
                 }
             }
         }
+        #endregion Hook
+
+        #region Notifiers
+        void NotifyAdminsIngame(List<string> positionList, List<string> nameList, List<string> statusList, List<ulong> idList)
+        {
+            string message = $"<color=red>{configData.WebhookTitle}</color>\n{positionList[0]}\n";
+
+            for (int i = 0; i < nameList.Count; i++)
+            {
+                string color = "";
+                if (statusList[i] == "Online")
+                    color = configData.OnlineColor;
+                else
+                    color = configData.OfflineColor;
+
+                message += $"<color={color}>{statusList[i]}</color> {nameList[i]} [{idList[i].ToString()}]\n";
+            }
+
+            var admins = BasePlayer.allPlayerList.Where(p => p.IsAdmin);
+
+            foreach (var admin in admins)
+            {
+                SendReply(admin, message);
+            }
+        }
 
         void SendDiscordMessage(List<string> names, List<ulong> ids, List<string> position, List<string> status)
         {
-
             object fields = new[]
             {
                 new
@@ -156,12 +162,10 @@ namespace Oxide.Plugins
                 },
             };
 
-
             string json = JsonConvert.SerializeObject(fields);
             DiscordMessages?.Call("API_SendFancyMessage", configData.DiscordWebhook, configData.WebhookTitle, 2, json);
 
         }
-
-
+        #endregion Notifiers
     }
 }
