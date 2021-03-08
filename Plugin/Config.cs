@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Oxide.Plugins
 {
@@ -10,11 +11,16 @@ namespace Oxide.Plugins
         #region Config
         class ConfigData
         {
-
             [JsonProperty(PropertyName = "Config Item")]
-            public string ConfigName { get; set; }            
+            public string ConfigName { get; set; }                    
+        }
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                ["SKR.Current"] = "Currently killing a player will give:",
 
-
+            }, this);
         }
         private bool LoadConfigVariables()
         {

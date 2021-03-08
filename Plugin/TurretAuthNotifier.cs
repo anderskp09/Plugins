@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.5")]
+    [Info("TurretAuthNotifier", "MikeLitoris", "0.0.6")]
     class TurretAuthNotifier : RustPlugin
     {
         [PluginReference]
@@ -26,10 +26,15 @@ namespace Oxide.Plugins
             public bool DiscordWebhookEnable { get; set; }
             [JsonProperty(PropertyName = "Discord Webhook")]
             public string DiscordWebhook { get; set; }
-            [JsonProperty(PropertyName = "Discord Webhook Message")]
-            public string WebhookTitle { get; set; }            
         }
 
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                ["WebhookMessage"] = "Max players authorized on turret exceeded:",
+            }, this);
+        }
         private bool LoadConfigVariables()
         {
             try
@@ -55,7 +60,7 @@ namespace Oxide.Plugins
         protected override void LoadDefaultConfig()
         {
             Puts("Creating new config with default values");
-            configData = new ConfigData { MaxAuth = 1, WebhookTitle = "Max players authorized on turret exceeded", DiscordWebhook = "", DiscordWebhookEnable = true, IngameNotificationEnable = true, OnlineColor = "green", OfflineColor = "red" };
+            configData = new ConfigData { MaxAuth = 1, DiscordWebhook = "", DiscordWebhookEnable = true, IngameNotificationEnable = true, OnlineColor = "green", OfflineColor = "red" };
             SaveConfig(configData);
         }
 
@@ -93,7 +98,7 @@ namespace Oxide.Plugins
                     }
                 }
 
-                positionList.Add($"Teleportpos ({ turret.transform.position.x.ToString().Substring(0, 5)},{ turret.transform.position.y.ToString().Substring(0, 5)},{ turret.transform.position.z.ToString().Substring(0, 5)})");
+                positionList.Add($"Teleportpos ({turret.transform.position.x.ToString().Substring(0, 5)},{turret.transform.position.y.ToString().Substring(0, 5)},{turret.transform.position.z.ToString().Substring(0, 5)})");
                 nameList.Add(player.displayName);
                 nameListLink.Add($"[{player.displayName}](https://steamcommunity.com/profiles/{player.userID})");
                 idList.Add(player.userID);
@@ -119,7 +124,7 @@ namespace Oxide.Plugins
         #region Notifiers
         void NotifyAdminsIngame(List<string> positionList, List<string> nameList, List<string> statusList, List<ulong> idList)
         {
-            string message = $"<color=red>{configData.WebhookTitle}</color>\n{positionList[0]}\n";
+            string message = $"<color=red>{lang.GetMessage("WebhookMessage", this)}</color>\n{positionList[0]}\n";
 
             for (int i = 0; i < nameList.Count; i++)
             {
@@ -163,7 +168,7 @@ namespace Oxide.Plugins
             };
 
             string json = JsonConvert.SerializeObject(fields);
-            DiscordMessages?.Call("API_SendFancyMessage", configData.DiscordWebhook, configData.WebhookTitle, 2, json);
+            DiscordMessages?.Call("API_SendFancyMessage", configData.DiscordWebhook, lang.GetMessage("WebhookMessage", this), 2, json);
 
         }
         #endregion Notifiers
