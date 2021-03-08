@@ -28,6 +28,10 @@ namespace Oxide.Plugins
             public string DiscordWebhook { get; set; }
             [JsonProperty(PropertyName = "Discord Webhook Message")]
             public string WebhookTitle { get; set; }
+            [JsonProperty(PropertyName = "Ingame 'Online message' color")]
+            public string OnlineColor { get; set; }
+            [JsonProperty(PropertyName = "Ingame 'Offline message' color")]
+            public string OfflineColor { get; set; }
         }
 
         private bool LoadConfigVariables()
@@ -55,7 +59,7 @@ namespace Oxide.Plugins
         protected override void LoadDefaultConfig()
         {
             Puts("Creating new config");
-            configData = new ConfigData { MaxAuth = 1, WebhookTitle = "Max players authorized on turret exceeded", DiscordWebhook = "", DiscordWebhookEnable = true, IngameNotificationEnable = true };
+            configData = new ConfigData { MaxAuth = 1, WebhookTitle = "Max players authorized on turret exceeded", DiscordWebhook = "", DiscordWebhookEnable = true, IngameNotificationEnable = true, OnlineColor = "green", OfflineColor = "red" };
             SaveConfig(configData);
         }
 
@@ -93,7 +97,7 @@ namespace Oxide.Plugins
                         statusList.Add("Online");
                     }
                 }
-                positionList.Add($"teleportpos ({ turret.transform.position.x.ToString().Substring(0, 5)},{ turret.transform.position.y.ToString().Substring(0, 5)},{ turret.transform.position.z.ToString().Substring(0, 5)})");
+                positionList.Add($"Teleportpos ({ turret.transform.position.x.ToString().Substring(0, 5)},{ turret.transform.position.y.ToString().Substring(0, 5)},{ turret.transform.position.z.ToString().Substring(0, 5)})");
                 nameList.Add(player.displayName);
                 nameListLink.Add($"[{player.displayName}](https://steamcommunity.com/profiles/{player.userID})");
                 idList.Add(player.userID);
@@ -104,10 +108,15 @@ namespace Oxide.Plugins
 
                 if(configData.IngameNotificationEnable == true)
                 {
-                    string message = $"{configData.WebhookTitle}\n {positionList[0]} ";
+                    string message = $"<color=red>{configData.WebhookTitle}</color>\n{positionList[0]}\n";
                     for (int i = 0; i < nameList.Count; i++)
                     {
-                        message += $"{statusList[i]} {nameList[i]} [{idList[i].ToString()}]\n";
+                        string color = "";
+                        if (statusList[i] == "Online")
+                            color = configData.OnlineColor;
+                        else
+                            color = configData.OfflineColor;
+                        message += $"<color={color}>{statusList[i]}</color> {nameList[i]} [{idList[i].ToString()}]\n";
                     }
                     
                     var admins = BasePlayer.allPlayerList.Where(p => p.IsAdmin);
@@ -116,7 +125,6 @@ namespace Oxide.Plugins
                         SendReply(admin, message);
                     }
                 }
-
 
                 if (configData.DiscordWebhookEnable == true && configData.DiscordWebhook != "" && configData.DiscordWebhook != null)
                 {
@@ -132,7 +140,7 @@ namespace Oxide.Plugins
             {
                 new
                 {                    
-                    name = "Status", value = string.Join("\n", status), inline = true
+                name = "Status", value = string.Join("\n", status), inline = true
                 },
                 new
                 {
