@@ -100,12 +100,17 @@ namespace Oxide.Plugins
 
                 if(configData.IngameNotificationEnable == true)
                 {
+                    string message = configData.WebhookTitle+"\n";
+                    for (int i = 0; i < nameList.Count; i++)
+                    {
+                        message += $"{statusList[i]} {nameList[i]} {idList[i].ToString()}\n";
+                    }
+                    
                     var admins = BasePlayer.allPlayerList.Where(p => p.IsAdmin);
                     foreach (var admin in admins)
                     {
-                        Puts(admin.ToString());
+                        SendReply(admin, message);
                     }
-                    //Puts()
                 }
 
 
