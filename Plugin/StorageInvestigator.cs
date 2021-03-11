@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("StorageInvestigator", "Mikey", "0.0.1")]
+    [Info("StorageInvestigator", "Mikey", "0.0.2")]
     class StorageInvestigator : RustPlugin
     {
         
@@ -104,8 +104,8 @@ namespace Oxide.Plugins
                         }                        
                     }
                 }
-                List<Contestant> sorted = contestants.OrderBy(c => c.Ammount).ToList();
-                string message = "";
+                List<Contestant> sorted = contestants.OrderByDescending(c => c.Ammount).ToList();
+                string message = "<color=green>And the winner(s) are: </color> \n";
                 
                 foreach (var contestant in sorted)
                 {
