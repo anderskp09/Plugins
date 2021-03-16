@@ -104,7 +104,7 @@ namespace Oxide.Plugins
                         }                        
                     }
                 }
-                List<Contestant> sorted = contestants.OrderByDescending(c => c.Ammount).ToList();
+                List<Contestant> sorted = contestants.OrderBy(c => c.Ammount).ToList();
                 string message = "<color=green>And the winner(s) are: </color> \n";
                 
                 foreach (var contestant in sorted)

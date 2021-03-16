@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Oxide.Plugins
 {
-    [Info("SimpleKillRewards", "MikeL", "0.0.6")]
+    [Info("SimpleKillRewards", "MikeL", "0.0.7")]
     [Description("Simple Rewards for killing players or NPC's.")]
     class SimpleKillRewards : RustPlugin
     {
@@ -24,7 +24,7 @@ namespace Oxide.Plugins
         {
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["SKR.Current"] = "Currently killing a player will give:",                              
+                ["SKR.Current"] = "Currently killing a player will give: ",                              
                 ["SKR.Set"] = "You sucessfully configured SKR to give:",
                 ["SKR.Incorrect"] = "Incorrect format, follow this syntax '/SKR Scrap 100' Currently 1 kill will give:",
                 ["SKR.NoPermission"] = "You dont have permision to use this command!",
@@ -138,14 +138,22 @@ namespace Oxide.Plugins
                 }
                 else
                 {
-                    info.Initiator.GiveItem(ItemManager.CreateByName(configData.Shorthand.ToString(), configData.Ammount));
+                    if( player != info.InitiatorPlayer)
+                    {
+                        info.Initiator.GiveItem(ItemManager.CreateByName(configData.Shorthand.ToString(), configData.Ammount));
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
             }
             catch
             {
                 Puts(lang.GetMessage("SKR.Incorrect", this));
             }            
-        }        
+        }
+        
         #endregion Action
     }    
 }
