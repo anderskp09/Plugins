@@ -16,6 +16,9 @@ namespace Oxide.Plugins
         {
             [JsonProperty(PropertyName = "Container name")]
             public string ContainerName { get; set; }
+            [JsonProperty(PropertyName = "Item ID")]
+            public int ItemId { get; set; }
+
         }
         class Contestant
         {
@@ -59,7 +62,7 @@ namespace Oxide.Plugins
         protected override void LoadDefaultConfig()
         {
             Puts("Creating new config");
-            configData = new ConfigData { ContainerName = "assets/prefabs/deployable/tool cupboard/cupboard.tool.deployed.prefab" };
+            configData = new ConfigData { ContainerName = "assets/prefabs/deployable/tool cupboard/cupboard.tool.deployed.prefab", ItemId = -932201673 };
             SaveConfig(configData);
         }
 
@@ -74,7 +77,7 @@ namespace Oxide.Plugins
         #endregion Config
         [ChatCommand("SI")]
         void Investigate(BasePlayer player, string command, string[] args)
-        {            
+        {
             if (permission.UserHasPermission(player.userID.ToString(), permissionAdmin))
             {
                 var contestants = new List<Contestant>();
@@ -86,34 +89,37 @@ namespace Oxide.Plugins
                 }
                 foreach (StorageContainer sc in Resources.FindObjectsOfTypeAll<StorageContainer>())
                 {
-                    if (sc.PrefabName.Contains(configData.ContainerName) || sc.PrefabName== configData.ContainerName)
+                    if (sc.PrefabName.Contains(configData.ContainerName) || sc.PrefabName == configData.ContainerName)
                     {
                         if (BasePlayer.FindAwakeOrSleeping(sc.OwnerID.ToString()) != null)
                         {
                             string name = BasePlayer.FindAwakeOrSleeping(sc.OwnerID.ToString()).displayName;
                             var contestant = contestants.Find(i => i.Name == name);
                             contestant.ContainerCount += 1;
-                            
+
                             ItemContainer inventory = sc.inventory;
                             if (inventory == null) continue;
-                            List<Item> list = inventory.itemList.FindAll((Item x) => x.info.itemid == -932201673);
+                            List<Item> list = inventory.itemList.FindAll((Item x) => x.info.itemid == configData.ItemId);
                             int total = 0;
                             for (int i = 0; i < list.Count; i++)
                                 total += list[i].amount;
                             contestant.Ammount += total;
-                        }                        
+                        }
                     }
                 }
                 List<Contestant> sorted = contestants.OrderBy(c => c.Ammount).ToList();
                 string message = "<color=green>And the winner(s) are: </color> \n";
-                
+                var i = 0;
                 foreach (var contestant in sorted)
                 {
-                    message += $"{contestant.Name} Had {contestant.Ammount} scrap in {contestant.ContainerCount} TCs \n";
+                    if (i <= 10)
+                    {
+                        message += $"{contestant.Name} Had {contestant.Ammount} scrap in {contestant.ContainerCount} TCs \n";
+                    }
+                    i++;
                 }
                 Puts(message);
                 PrintToChat(message);
-
             }
         }
     }
