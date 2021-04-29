@@ -158,6 +158,7 @@ namespace Oxide.Plugins
                     savedName.Name = player.displayName;                  
                     SaveData();
                     SendReply(player, $"Name {player.displayName} has been saved!");
+                    Puts($"Name {player.displayName} has been saved!");
                 }
                 else
                 {
