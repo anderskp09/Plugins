@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Oxide.Core;
+using System;
 using System.Collections.Generic;
 
 namespace Oxide.Plugins
 {
-    [Info("savemyname", "Mikey", "0.0.2")]
+    [Info("savemyname", "Mikey", "0.0.3")]
     class SaveMyName : RustPlugin
     {
         private ConfigData configData;
@@ -20,7 +21,8 @@ namespace Oxide.Plugins
         {
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["blockedname"] = "The name youre trying to connect with has been blocked, please switch and reconnect",
+                ["blockedname"] = "The name youre trying to connect with has been blocked, please switch and reconnect - Or visit the Discord if you feel this is unjust",
+                ["clearedname"] = " has been removed from the saved names",
 
             }, this);
         }
@@ -66,6 +68,7 @@ namespace Oxide.Plugins
         {
             public ulong SteamID { get; set; }
             public string Name { get; set; }
+            public DateTime Timestamp { get; set; }
         }
 
         StoredData storedData;
@@ -138,6 +141,8 @@ namespace Oxide.Plugins
                 {
                     SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
                     storedData.savedNames.Remove(savedName);
+                    SendReply(player, savedName.Name + lang.GetMessage("clearedname", this));
+                    Puts(savedName.Name + lang.GetMessage("clearedname", this));
                     SaveData();
                 }
                 catch (System.Exception)
@@ -155,16 +160,18 @@ namespace Oxide.Plugins
                 if (storedData.savedNames.Find(x => x.SteamID == player.userID) != null)
                 {
                     SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
-                    savedName.Name = player.displayName;                  
+                    savedName.Name = player.displayName;
+                    savedName.Timestamp = DateTime.Now;
                     SaveData();
                     SendReply(player, $"Name {player.displayName} has been saved!");
                     Puts($"Name {player.displayName} has been saved!");
                 }
                 else
                 {
-                    SavedNames saved = new SavedNames { SteamID = player.userID, Name = player.displayName };
+                    SavedNames saved = new SavedNames { SteamID = player.userID, Name = player.displayName, Timestamp = DateTime.Now };
                     storedData.savedNames.Add(saved);
                     SaveData();
+                    Puts($"Name {player.displayName} has been saved!");
                     SendReply(player, $"Name {player.displayName} has been saved!");
                 }                
             }
