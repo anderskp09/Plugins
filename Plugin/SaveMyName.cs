@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace Oxide.Plugins
 {
     [Info("savemyname", "Mikey", "0.0.3")]
+    [Description("Allows saving of your name for online and offline protection")]
     class SaveMyName : RustPlugin
     {
         private ConfigData configData;
@@ -14,7 +15,7 @@ namespace Oxide.Plugins
         #region Config
         class ConfigData
         {
-            [JsonProperty(PropertyName = "Config Item")]
+            [JsonProperty(PropertyName = "Admins can bypass the name-restrictions")]
             public bool IgnoreAdmins { get; set; }
         }
         protected override void LoadDefaultMessages()
@@ -23,6 +24,8 @@ namespace Oxide.Plugins
             {
                 ["blockedname"] = "The name youre trying to connect with has been blocked, please switch and reconnect - Or visit the Discord if you feel this is unjust",
                 ["clearedname"] = " has been removed from the saved names",
+                ["nofoundmame"] = " No saved name found, use /savemyname to save current name",
+
 
             }, this);
         }
@@ -147,7 +150,7 @@ namespace Oxide.Plugins
                 }
                 catch (System.Exception)
                 {
-                    SendReply(player, "No saved name found, use /savemyname to save current name");
+                    SendReply(player, lang.GetMessage("nofoundname", this));
                 }
             }
         }
