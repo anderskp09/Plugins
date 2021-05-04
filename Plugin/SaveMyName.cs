@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Oxide.Plugins
 {
-    [Info("Save my Name", "MikeLitoris", "0.0.3")]
+    [Info("Save my Name", "MikeLitoris", "0.0.5")]
     [Description("Allows saving of your name for online and offline protection")]
     class SaveMyName : RustPlugin
     {
@@ -26,6 +26,7 @@ namespace Oxide.Plugins
                 ["blockedname"] = "The name youre trying to connect with has been blocked, please switch and reconnect - Or visit the Discord if you feel this is unjust",
                 ["clearedname"] = " has been removed from the saved names",
                 ["nofoundmame"] = " No saved name found, use /savemyname to save current name",
+                ["savedname"] = " Has been saved!",
 
 
             }, this);
@@ -179,16 +180,16 @@ namespace Oxide.Plugins
                         savedName.Name = player.displayName;
                         savedName.Timestamp = DateTime.Now;
                         SaveData();
-                        SendReply(player, $"Name {player.displayName} has been saved!");
-                        Puts($"Name {player.displayName} has been saved!");
+                        SendReply(player, player.displayName + lang.GetMessage("savedname", this));
+                        Puts(player.displayName + lang.GetMessage("savedname", this));
                     }
                     else
                     {
                         SavedNames saved = new SavedNames { SteamID = player.userID, Name = player.displayName, Timestamp = DateTime.Now };
                         storedData.savedNames.Add(saved);
                         SaveData();
-                        Puts($"Name {player.displayName} has been saved!");
-                        SendReply(player, $"Name {player.displayName} has been saved!");
+                        Puts(player.displayName + lang.GetMessage("savedname", this));
+                        SendReply(player, player.displayName + lang.GetMessage("savedname", this));
                     }
                 }
             }
