@@ -5,19 +5,20 @@ using System.Collections.Generic;
 
 namespace Oxide.Plugins
 {
-    [Info("savemyname", "Mikey", "0.0.3")]
+    [Info("Save my Name", "MikeLitoris", "0.0.3")]
     [Description("Allows saving of your name for online and offline protection")]
     class SaveMyName : RustPlugin
     {
         private ConfigData configData;
         private const string savemyname = "SaveMyName.use";
         private const string savemynameadmin = "SaveMyName.admin";
-        #region Config
+
         class ConfigData
         {
             [JsonProperty(PropertyName = "Admins can bypass the name-restrictions")]
             public bool IgnoreAdmins { get; set; }
         }
+
         protected override void LoadDefaultMessages()
         {
             lang.RegisterMessages(new Dictionary<string, string>
@@ -29,6 +30,7 @@ namespace Oxide.Plugins
 
             }, this);
         }
+
         private bool LoadConfigVariables()
         {
             try
@@ -94,20 +96,23 @@ namespace Oxide.Plugins
 
         void OnPlayerConnected(BasePlayer player)
         {
-            foreach (var storedname in storedData.savedNames)
-            {
-                if (configData.IgnoreAdmins)
+           if(player != null)
+            { 
+                foreach (var storedname in storedData.savedNames)
                 {
-                    if (player.displayName == storedname.Name && player.userID != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true && player.IsAdmin == false)
+                    if (configData.IgnoreAdmins)
                     {
-                        player.Kick(lang.GetMessage("blockedname", this));
+                        if (player.displayName == storedname.Name && player.userID != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true && player.IsAdmin == false)
+                        {
+                            player.Kick(lang.GetMessage("blockedname", this));
+                        }
                     }
-                }
-                else
-                {
-                    if (player.displayName == storedname.Name && player.userID != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true)
+                    else
                     {
-                        player.Kick(lang.GetMessage("blockedname", this));
+                        if (player.displayName == storedname.Name && player.userID != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true)
+                        {
+                            player.Kick(lang.GetMessage("blockedname", this));
+                        }
                     }
                 }
             }
@@ -116,20 +121,23 @@ namespace Oxide.Plugins
         void OnUserNameUpdated(string id, string oldName, string newName)
         {
             BasePlayer player = BasePlayer.FindAwakeOrSleeping(id);
-            foreach (var storedname in storedData.savedNames)
-            {
-                if (configData.IgnoreAdmins)
-                { 
-                    if (newName == storedname.Name && ulong.Parse(id) != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true && player.IsAdmin == false)// && player.IsAdmin == false)
-                    {                        
-                        player.Kick(lang.GetMessage("blockedname", this));
-                    }
-                }
-                else
+            if(player != null)
+            {                           
+                foreach (var storedname in storedData.savedNames)
                 {
-                    if (newName == storedname.Name && ulong.Parse(id) != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true)
+                    if (configData.IgnoreAdmins)
+                    { 
+                        if (newName == storedname.Name && ulong.Parse(id) != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true && player.IsAdmin == false)// && player.IsAdmin == false)
+                        {                        
+                            player.Kick(lang.GetMessage("blockedname", this));
+                        }
+                    }
+                    else
                     {
-                        player.Kick(lang.GetMessage("blockedname", this));
+                        if (newName == storedname.Name && ulong.Parse(id) != storedname.SteamID && permission.UserHasPermission(storedname.SteamID.ToString(), savemyname) == true)
+                        {
+                            player.Kick(lang.GetMessage("blockedname", this));
+                        }
                     }
                 }
             }
@@ -138,19 +146,22 @@ namespace Oxide.Plugins
         [ChatCommand("clearmyname")]
         void ClearName(BasePlayer player, string command, string[] args)
         {
-            if (permission.UserHasPermission(player.UserIDString, savemyname))
-            {
-                try
+            if(player != null)
+            {           
+                if (permission.UserHasPermission(player.UserIDString, savemyname))
                 {
-                    SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
-                    storedData.savedNames.Remove(savedName);
-                    SendReply(player, savedName.Name + lang.GetMessage("clearedname", this));
-                    Puts(savedName.Name + lang.GetMessage("clearedname", this));
-                    SaveData();
-                }
-                catch (System.Exception)
-                {
-                    SendReply(player, lang.GetMessage("nofoundname", this));
+                    try
+                    {
+                        SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
+                        storedData.savedNames.Remove(savedName);
+                        SendReply(player, savedName.Name + lang.GetMessage("clearedname", this));
+                        Puts(savedName.Name + lang.GetMessage("clearedname", this));
+                        SaveData();
+                    }
+                    catch (System.Exception)
+                    {
+                        SendReply(player, lang.GetMessage("nofoundname", this));
+                    }
                 }
             }
         }
@@ -158,25 +169,28 @@ namespace Oxide.Plugins
         [ChatCommand("savemyname")]
         void SaveName(BasePlayer player, string command, string[] args)
         {
-            if (permission.UserHasPermission(player.UserIDString, savemyname))
-            {
-                if (storedData.savedNames.Find(x => x.SteamID == player.userID) != null)
+            if (player != null)
+            {               
+                if (permission.UserHasPermission(player.UserIDString, savemyname))
                 {
-                    SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
-                    savedName.Name = player.displayName;
-                    savedName.Timestamp = DateTime.Now;
-                    SaveData();
-                    SendReply(player, $"Name {player.displayName} has been saved!");
-                    Puts($"Name {player.displayName} has been saved!");
+                    if (storedData.savedNames.Find(x => x.SteamID == player.userID) != null)
+                    {
+                        SavedNames savedName = storedData.savedNames.Find(x => x.SteamID == player.userID);
+                        savedName.Name = player.displayName;
+                        savedName.Timestamp = DateTime.Now;
+                        SaveData();
+                        SendReply(player, $"Name {player.displayName} has been saved!");
+                        Puts($"Name {player.displayName} has been saved!");
+                    }
+                    else
+                    {
+                        SavedNames saved = new SavedNames { SteamID = player.userID, Name = player.displayName, Timestamp = DateTime.Now };
+                        storedData.savedNames.Add(saved);
+                        SaveData();
+                        Puts($"Name {player.displayName} has been saved!");
+                        SendReply(player, $"Name {player.displayName} has been saved!");
+                    }
                 }
-                else
-                {
-                    SavedNames saved = new SavedNames { SteamID = player.userID, Name = player.displayName, Timestamp = DateTime.Now };
-                    storedData.savedNames.Add(saved);
-                    SaveData();
-                    Puts($"Name {player.displayName} has been saved!");
-                    SendReply(player, $"Name {player.displayName} has been saved!");
-                }                
             }
             
         }
@@ -189,25 +203,24 @@ namespace Oxide.Plugins
                 line += $"[{sn.SteamID}] {sn.Name}\n";
             }
             Puts(line);
-
         }
+
         [ChatCommand("savednames")]
         void SavedNamesList(BasePlayer player, string command, string[] args)
         {
-            if (permission.UserHasPermission(player.UserIDString, savemynameadmin))
+            if (player != null)
             {
-                string line = "";
-                foreach (var sn in storedData.savedNames)
+                if (permission.UserHasPermission(player.UserIDString, savemynameadmin))
                 {
-                    line += $"[{sn.SteamID}] {sn.Name}\n";
+                    string line = "";
+                    foreach (var sn in storedData.savedNames)
+                    {
+                        line += $"[{sn.SteamID}] {sn.Name}\n";
+                    }
+                    SendReply(player, line);
+
                 }
-                SendReply(player, line);
-                
             }
-
         }
-            #endregion Config
     }
-
-
 }

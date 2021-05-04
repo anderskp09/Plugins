@@ -81,6 +81,7 @@ namespace Oxide.Plugins
 
             if (turret.authorizedPlayers.Count + 1 > configData.MaxAuth)
             {
+                Puts(turret.authorizedPlayers[0].username);
                 foreach (var authed in turret.authorizedPlayers)
                 {
                     nameListLink.Add($"[{authed.username}](https://steamcommunity.com/profiles/{authed.userid})");
@@ -166,7 +167,6 @@ namespace Oxide.Plugins
                 name = "Position", value = string.Join("\n", position), inline = false
                 },
             };
-
             string json = JsonConvert.SerializeObject(fields);
             DiscordMessages?.Call("API_SendFancyMessage", configData.DiscordWebhook, lang.GetMessage("WebhookMessage", this), 2, json);
 
