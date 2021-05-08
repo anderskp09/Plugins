@@ -129,7 +129,8 @@ namespace Oxide.Plugins
         #region Action        
 
         void OnPlayerDeath(BasePlayer player, HitInfo info)
-        {            
+        {
+            if (info.InitiatorPlayer == null) return;
             try
             {
                 if (!permission.UserHasPermission(info.InitiatorPlayer.userID.ToString(), permissionEnable))
