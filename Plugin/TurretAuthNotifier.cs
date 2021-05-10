@@ -73,6 +73,7 @@ namespace Oxide.Plugins
         #region Hook
         void OnTurretAuthorize(AutoTurret turret, BasePlayer player)
         {
+            if (turret.IsAuthed(player)) return;
             var nameListLink = new List<string>();
             var nameList = new List<string>();
             var statusList = new List<string>();
