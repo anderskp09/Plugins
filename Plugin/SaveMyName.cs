@@ -83,7 +83,11 @@ namespace Oxide.Plugins
         {
           public List<SavedNames> savedNames  = new List<SavedNames>();
         }
-        
+
+
+        #endregion config
+        #region hooks
+
         void Loaded()
         {
             storedData = Interface.Oxide.DataFileSystem.ReadObject<StoredData>("SaveMyName");
@@ -94,9 +98,6 @@ namespace Oxide.Plugins
         {
             Interface.Oxide.DataFileSystem.WriteObject("SaveMyName", storedData);
         }
-
-        #endregion config
-        #region hooks
 
         void OnPlayerConnected(BasePlayer player)
         {
